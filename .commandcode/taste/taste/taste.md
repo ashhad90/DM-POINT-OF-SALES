@@ -1,0 +1,15 @@
+# Taste
+- Prefers React + Tailwind CSS + Supabase (auth, Postgres/RLS, RPCs, realtime) as the stack for full-stack web apps. Confidence: 0.8
+- Prefers a SQL schema/migration file as the foundation of a project, with RLS enabled and security-definer RPCs for critical mutations (e.g., stock changes). Confidence: 0.7
+- Prefers a modern, clean retail aesthetic (Square/Shopify POS-style): neutral color palette with a single accent color reserved for primary actions. Confidence: 0.9
+- Prefers touch-friendly interfaces with large, tappable buttons, optimized for tablets as the primary device and desktop for back-office work. Confidence: 0.9
+- Prefers fast, minimal-click workflows for in-store tools (e.g., checkout optimized for speed). Confidence: 0.8
+- Prefers a clear, professional UI with sidebar navigation grouping the main modules. Confidence: 0.7
+- Prefers building in dependency order: database schema and data layer first, then core modules (e.g., product management → checkout → reporting). Confidence: 0.8
+- Prefers persisting all business transactions with timestamps and audit trails (e.g., stock adjustments with reasons, void/refund history). Confidence: 0.8
+- Prefers role-based access control with distinct permission levels (e.g., admin vs. cashier) for multi-user business apps. Confidence: 0.6
+- Wants demo/seed users with known credentials available so the app is immediately testable, rather than requiring manual user setup. Confidence: 0.8
+- When a required backend/auth setup blocks immediate use, prefers to bypass or remove the blocker (e.g., drop the login page and fall back to a demo admin user) so the app stays usable right away, even if data doesn't persist. Confidence: 0.6
+- Prefers the agent to handle setup/configuration and operational tasks (e.g., backend credentials, env files, running/verifying the dev server) end-to-end so the app is usable immediately, rather than being handed manual steps to follow. Confidence: 0.6
+- Communicates UI/technical issues by sending screenshots/images, often with no accompanying text, and expects the agent to diagnose the problem from the image alone (repeated behavior, including reporting the same ongoing bug again via image). Confidence: 0.7
+- Expects the agent to run/start the project and confirm it's live (e.g., "RUN THE PROJECT") rather than only writing code and waiting to be asked. Confidence: 0.7
