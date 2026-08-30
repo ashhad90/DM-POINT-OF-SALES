@@ -9,6 +9,8 @@ import Customers from './pages/Customers'
 import Expenses from './pages/Expenses'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import Transactions from './pages/Transactions'
+import Ledger from './pages/Ledger'
 
 function AdminOnly({ children }) {
   const { isAdmin, loading } = useAuth()
@@ -38,8 +40,10 @@ export default function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/transactions" element={<Transactions />} />
         <Route path="/products" element={<Products />} />
         <Route path="/customers" element={<AdminOnly><Customers /></AdminOnly>} />
+        <Route path="/ledger" element={<AdminOnly><Ledger /></AdminOnly>} />
         <Route path="/expenses" element={<AdminOnly><Expenses /></AdminOnly>} />
         <Route path="/reports" element={<AdminOnly><Reports /></AdminOnly>} />
         <Route path="/settings" element={<AdminOnly><Settings /></AdminOnly>} />

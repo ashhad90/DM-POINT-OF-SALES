@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  DollarSign, ShoppingBag, TrendingUp, Package, AlertTriangle, BarChart3, Calendar
+  Banknote, ShoppingBag, TrendingUp, Package, AlertTriangle, BarChart3, Calendar, Printer
 } from 'lucide-react'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, Legend
@@ -149,18 +149,26 @@ export default function Reports() {
           <h1 className="text-2xl font-bold text-slate-800">Reports</h1>
           <p className="text-sm text-slate-500">{periodLabel}</p>
         </div>
-        <div className="flex gap-2">
-          {Object.entries(periods).map(([key, p]) => (
-            <button
-              key={key}
-              onClick={() => setPeriod(key)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold ${
-                period === key ? 'bg-accent-600 text-white' : 'bg-white text-slate-600 shadow-sm hover:bg-slate-50'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-2">
+            {Object.entries(periods).map(([key, p]) => (
+              <button
+                key={key}
+                onClick={() => setPeriod(key)}
+                className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+                  period === key ? 'bg-accent-600 text-white' : 'bg-white text-slate-600 shadow-sm hover:bg-slate-50'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => window.print()}
+            className="btn-secondary hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold shadow-sm bg-white hover:bg-slate-50"
+          >
+            <Printer size={16} /> Print
+          </button>
         </div>
       </div>
 
@@ -171,31 +179,31 @@ export default function Reports() {
           {/* KPI row */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div className="card flex items-center gap-4 p-5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-50 text-accent-600"><DollarSign size={22} /></div>
-              <div>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600"><Banknote size={22} /></div>
+              <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase text-slate-400">Revenue</p>
-                <p className="text-2xl font-bold text-slate-800">{fmtMoney(stats.revenue)}</p>
+                <p className="text-xl font-bold text-slate-800 tracking-tight break-words">{fmtMoney(stats.revenue)}</p>
               </div>
             </div>
             <div className="card flex items-center gap-4 p-5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><TrendingUp size={22} /></div>
-              <div>
-                <p className="text-xs font-semibold uppercase text-slate-400">Cost of Goods (COGS)</p>
-                <p className="text-2xl font-bold text-slate-800">{fmtMoney(stats.cogs)}</p>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><ShoppingBag size={22} /></div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase text-slate-400">Cost of Goods</p>
+                <p className="text-xl font-bold text-slate-800 tracking-tight break-words">{fmtMoney(stats.cogs)}</p>
               </div>
             </div>
             <div className="card flex items-center gap-4 p-5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600"><ShoppingBag size={22} /></div>
-              <div>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600"><TrendingUp size={22} /></div>
+              <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase text-slate-400">Total Expenses</p>
-                <p className="text-2xl font-bold text-amber-600">{fmtMoney(stats.expensesTotal)}</p>
+                <p className="text-xl font-bold text-amber-600 tracking-tight break-words">{fmtMoney(stats.expensesTotal)}</p>
               </div>
             </div>
             <div className="card flex items-center gap-4 p-5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><DollarSign size={22} /></div>
-              <div>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><Banknote size={22} /></div>
+              <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase text-slate-400">Net Profit</p>
-                <p className={`text-2xl font-bold ${stats.netProfit < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                <p className={`text-xl font-bold tracking-tight break-words ${stats.netProfit < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                   {fmtMoney(stats.netProfit)}
                 </p>
               </div>
@@ -212,7 +220,7 @@ export default function Reports() {
                 <BarChart data={stats.dailyBreakdown} margin={{ left: 8, right: 16 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={(v) => `PKR ${v}`} width={75} />
+                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={(v) => `PKR ${v}`} width={90} />
                   <Tooltip formatter={(v) => fmtMoney(v)} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Bar dataKey="revenue" fill="#4f46e5" name="Revenue" radius={[4, 4, 0, 0]} />

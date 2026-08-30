@@ -38,3 +38,13 @@ body {
     @apply rounded-xl border border-slate-200 bg-white shadow-sm;
   }
 }
+
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  aside, .md\:hidden { display: none !important; }
+  main { margin: 0 !important; padding: 0 !important; width: 100% !important; overflow: visible !important; }
+  .card { box-shadow: none !important; border-color: #cbd5e1 !important; break-inside: avoid; }
+  button { display: none !important; }
+}
+

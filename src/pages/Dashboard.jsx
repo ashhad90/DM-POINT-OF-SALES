@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { DollarSign, TrendingUp, Package, AlertTriangle, ShoppingCart, ArrowRight } from 'lucide-react'
+import { Banknote, TrendingUp, Package, AlertTriangle, ShoppingCart, ArrowRight } from 'lucide-react'
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid
 } from 'recharts'
@@ -16,7 +16,7 @@ function kpi(label, value, Icon, sub) {
       </div>
       <div className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-        <p className="truncate text-2xl font-bold text-slate-800">{value}</p>
+        <p className="text-xl font-bold text-slate-800 tracking-tight break-words">{value}</p>
         {sub && <p className="text-xs text-slate-400">{sub}</p>}
       </div>
     </div>
@@ -101,7 +101,7 @@ export default function Dashboard() {
           )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {kpi('Revenue (30d)', fmtMoney(stats.totalRevenue), DollarSign, `${stats.txnCount} transactions`)}
+            {kpi('Revenue (30d)', fmtMoney(stats.totalRevenue), Banknote, `${stats.txnCount} transactions`)}
             {kpi('Today', fmtMoney(stats.todayRevenue), TrendingUp, 'so far')}
             {kpi('Avg sale', fmtMoney(stats.avgSale), ShoppingCart, 'per transaction')}
             {kpi('Inventory value', fmtMoney(stats.inventoryValue), Package, `${products.length} products`)}
@@ -122,7 +122,7 @@ export default function Dashboard() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={(v) => `PKR ${v}`} width={75} />
+                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={(v) => `PKR ${v}`} width={90} />
                     <Tooltip formatter={(v) => fmtMoney(v)} labelStyle={{ fontWeight: 600 }} />
                     <Area type="monotone" dataKey="sales" stroke="#4f46e5" strokeWidth={2} fill="url(#sales)" />
                   </AreaChart>

@@ -8,15 +8,19 @@ import {
   Settings,
   LogOut,
   Store,
-  Receipt
+  Receipt,
+  FileText,
+  BookOpen
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
   { to: '/checkout', label: 'Checkout', icon: ShoppingCart, adminOnly: false },
+  { to: '/transactions', label: 'Billing', icon: FileText, adminOnly: false },
   { to: '/products', label: 'Products', icon: Package, adminOnly: false },
   { to: '/customers', label: 'Customers', icon: Users, adminOnly: true },
+  { to: '/ledger', label: 'Udhaar Ledgers', icon: BookOpen, adminOnly: true },
   { to: '/expenses', label: 'Expenses', icon: Receipt, adminOnly: true },
   { to: '/reports', label: 'Reports', icon: BarChart3, adminOnly: true },
   { to: '/settings', label: 'Settings', icon: Settings, adminOnly: true }

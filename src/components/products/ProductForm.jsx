@@ -114,11 +114,11 @@ export default function ProductForm({ open, onClose, product }) {
             />
           </div>
           <div>
-            <label className="label">Cost price ($)</label>
+            <label className="label">Cost price (PKR)</label>
             <input type="number" step="0.01" min="0" className="input" value={form.cost_price} onChange={set('cost_price')} />
           </div>
           <div>
-            <label className="label">Sale price ($) *</label>
+            <label className="label">Sale price (PKR) *</label>
             <input type="number" step="0.01" min="0" className="input" value={form.sale_price} onChange={set('sale_price')} required />
           </div>
           <div>

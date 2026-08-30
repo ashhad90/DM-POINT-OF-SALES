@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Users, Search, Plus, Phone, Mail, User, BookOpen, History, ChevronDown, ChevronUp, DollarSign } from 'lucide-react'
+import { Users, Search, Plus, Phone, Mail, User, BookOpen, History, ChevronDown, ChevronUp, Banknote, Printer } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 import { fmtMoney, fmtDate } from '../lib/format'
+import { printReceipt, printReceipts, useReceiptStore } from '../lib/receipt'
 import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
 export default function Customers() {
   const { push } = useToast()
+  const store = useReceiptStore()
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -364,82 +366,128 @@ export default function Customers() {
 
             {/* Purchase History Tab */}
             {activeTab === 'history' && (
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="space-y-3">
                 {history === null ? (
-                  <div className="flex justify-center py-10"><div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-accent-600" /></div>
+                  <div className="flex justify-center py-10">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-accent-600" />
+                  </div>
                 ) : history.length === 0 ? (
                   <p className="py-8 text-center text-sm text-slate-400">No purchases yet</p>
                 ) : (
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-                      <tr>
-                        <th className="px-4 py-2 font-semibold">Date</th>
-                        <th className="px-4 py-2 font-semibold">Receipt</th>
-                        <th className="px-4 py-2 font-semibold">Payment</th>
-                        <th className="px-4 py-2 font-semibold">Status</th>
-                        <th className="px-4 py-2 text-right font-semibold">Total</th>
-                        <th className="px-4 py-2"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {history.map((t) => {
-                        const isExpanded = expandedTxn === t.id
-                        return (
-                          <React.Fragment key={t.id}>
-                            <tr
-                              onClick={() => setExpandedTxn(isExpanded ? null : t.id)}
-                              className="border-t border-slate-100 hover:bg-slate-50/50 cursor-pointer"
-                            >
-                              <td className="px-4 py-2 text-slate-600">{fmtDate(t.created_at)}</td>
-                              <td className="px-4 py-2 font-mono text-xs text-slate-500">{t.receipt_number}</td>
-                              <td className="px-4 py-2 capitalize text-slate-600">{t.payment_method}</td>
-                              <td className="px-4 py-2">
-                                <Badge color={t.status === 'completed' ? 'green' : t.status === 'voided' ? 'red' : 'amber'}>{t.status}</Badge>
-                              </td>
-                              <td className="px-4 py-2 text-right font-semibold text-slate-800">{fmtMoney(t.total)}</td>
-                              <td className="px-4 py-2 text-center text-slate-400">
-                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                              </td>
-                            </tr>
-                            {isExpanded && (
-                              <tr className="bg-slate-50/60 border-t border-slate-100">
-                                <td colSpan="6" className="px-6 py-3">
-                                  <div className="rounded-lg border border-slate-200 bg-white p-3">
-                                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Items Purchased</h4>
-                                    <table className="w-full text-left text-xs">
-                                      <thead>
-                                        <tr className="border-b border-slate-100 text-slate-400 font-semibold">
-                                          <th className="pb-1.5">Product</th>
-                                          <th className="pb-1.5 text-center">Qty</th>
-                                          <th className="pb-1.5 text-right">Price</th>
-                                          <th className="pb-1.5 text-right">Discount</th>
-                                          <th className="pb-1.5 text-right">Total</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {(t.items || []).map((item) => (
-                                          <tr key={item.id} className="border-b border-slate-50 last:border-0">
-                                            <td className="py-1.5 text-slate-800 font-medium">
-                                              {item.product_name}
-                                              {item.sku && <span className="block text-[10px] text-slate-400 font-mono">{item.sku}</span>}
-                                            </td>
-                                            <td className="py-1.5 text-center text-slate-600">{item.quantity}</td>
-                                            <td className="py-1.5 text-right text-slate-600">{fmtMoney(item.unit_price)}</td>
-                                            <td className="py-1.5 text-right text-emerald-600">{item.discount > 0 ? `-${fmtMoney(item.discount)}` : '—'}</td>
-                                            <td className="py-1.5 text-right text-slate-800 font-semibold">{fmtMoney(item.line_total)}</td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </React.Fragment>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                  <div className="space-y-3">
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const bulkData = history.map(t => ({
+                            txn: { ...t, customer: selected },
+                            items: t.items || []
+                          }))
+                          printReceipts(bulkData, store)
+                        }}
+                        className="btn-secondary py-1.5 px-3 text-xs inline-flex items-center gap-1.5 bg-white shadow-sm"
+                      >
+                        <Printer size={14} /> Print All Bills
+                      </button>
+                    </div>
+                    {history.map((t) => {
+                      const isExpanded = expandedTxn === t.id
+                      return (
+                        <div 
+                          key={t.id} 
+                          className={`rounded-xl border transition-all duration-200 overflow-hidden ${isExpanded ? 'border-accent-300 shadow-md ring-1 ring-accent-100' : 'border-slate-200 shadow-sm hover:border-slate-300'}`}
+                        >
+                          <div 
+                            onClick={() => setExpandedTxn(isExpanded ? null : t.id)}
+                            className="flex flex-wrap items-center justify-between p-4 cursor-pointer bg-white hover:bg-slate-50"
+                          >
+                            <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Receipt No</p>
+                                <p className="font-mono text-sm font-bold text-slate-800">{t.receipt_number}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Date</p>
+                                <p className="text-sm font-medium text-slate-700">{fmtDate(t.created_at)}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Payment & Status</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <Badge variant={t.payment_method === 'credit' ? 'danger' : 'success'}>
+                                    {t.payment_method === 'credit' ? 'Credit / Udhaar' : t.payment_method}
+                                  </Badge>
+                                  <Badge variant={t.status === 'completed' ? 'success' : 'danger'}>
+                                    {t.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 mt-2 sm:mt-0">
+                              <div className="text-right">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Total Amount</p>
+                                <p className="text-base font-extrabold text-slate-900">{fmtMoney(t.total)}</p>
+                              </div>
+                              <div className={`flex items-center justify-center h-8 w-8 rounded-full bg-slate-100 text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-accent-100 text-accent-600' : ''}`}>
+                                <ChevronDown size={18} />
+                              </div>
+                            </div>
+                          </div>
+
+                          {isExpanded && (
+                            <div className="border-t border-slate-100 bg-slate-50/50 p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 flex-1">
+                                  Purchased Items
+                                  <span className="h-px bg-slate-200 flex-1 ml-2"></span>
+                                </h4>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    printReceipt({ ...t, customer: selected }, t.items || [], store);
+                                  }}
+                                  className="btn-secondary py-1.5 px-3 text-xs inline-flex items-center gap-1.5 whitespace-nowrap bg-white"
+                                >
+                                  <Printer size={13} /> Print Bill
+                                </button>
+                              </div>
+                              
+                              <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+                                <table className="w-full text-left text-xs">
+                                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
+                                    <tr>
+                                      <th className="px-4 py-2.5 font-semibold">Product</th>
+                                      <th className="px-4 py-2.5 text-center font-semibold">Qty</th>
+                                      <th className="px-4 py-2.5 text-right font-semibold">Price</th>
+                                      <th className="px-4 py-2.5 text-right font-semibold">Discount</th>
+                                      <th className="px-4 py-2.5 text-right font-semibold">Total</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100">
+                                    {(t.items || []).map((item) => (
+                                      <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-4 py-3 text-slate-800 font-medium">
+                                          {item.product_name}
+                                          {item.sku && <span className="block text-[10px] text-slate-400 font-mono mt-0.5">{item.sku}</span>}
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-slate-600 font-medium">{item.quantity}</td>
+                                        <td className="px-4 py-3 text-right text-slate-600">{fmtMoney(item.unit_price)}</td>
+                                        <td className="px-4 py-3 text-right font-medium text-emerald-600">
+                                          {item.discount > 0 ? `-${fmtMoney(item.discount)}` : '—'}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-slate-800 font-bold">{fmtMoney(item.line_total)}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
                 )}
               </div>
             )}
@@ -458,7 +506,7 @@ export default function Customers() {
                     }}
                     className="btn-primary flex items-center gap-1 py-2 px-4 text-sm font-semibold"
                   >
-                    <DollarSign size={15} /> Record Payment
+                    <Banknote size={15} /> Record Payment
                   </button>
                 </div>
 
@@ -510,7 +558,7 @@ export default function Customers() {
           <div className="absolute inset-0 bg-slate-900/50" onClick={() => setPaymentOpen(false)} />
           <form onSubmit={recordPayment} className="relative w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-1">
-              <DollarSign size={18} className="text-emerald-500" /> Record Udhaar Payment
+              <Banknote size={18} className="text-emerald-500" /> Record Udhaar Payment
             </h3>
             <p className="text-xs text-slate-400 mt-1">Receive payment to decrease the customer's outstanding balance.</p>
             

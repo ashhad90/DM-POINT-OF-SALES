@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Plus, Trash2, Calendar, Filter, Receipt, DollarSign, Briefcase, Zap } from 'lucide-react'
+import { Plus, Trash2, Calendar, Filter, Receipt, Banknote, Briefcase, Zap } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { fmtMoney, fmtDate } from '../lib/format'
 import Modal from '../components/ui/Modal'
@@ -20,6 +20,15 @@ export default function Expenses() {
   const [category, setCategory] = useState('other')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [error, setError] = useState('')
+  const [totalUdhaar, setTotalUdhaar] = useState(0)
+
+  useEffect(() => {
+    supabase.from('customers').select('balance').then(({ data }) => {
+      if (data) {
+        setTotalUdhaar(data.reduce((sum, c) => sum + (c.balance > 0 ? Number(c.balance) : 0), 0))
+      }
+    })
+  }, [])
 
   const loadExpenses = async () => {
     setLoading(true)
@@ -108,7 +117,7 @@ export default function Expenses() {
   const categoryIcons = {
     rent: <Briefcase className="text-blue-500" size={16} />,
     utilities: <Zap className="text-amber-500" size={16} />,
-    salaries: <DollarSign className="text-emerald-500" size={16} />,
+    salaries: <Banknote className="text-emerald-500" size={16} />,
     other: <Receipt className="text-slate-500" size={16} />
   };
 
@@ -128,26 +137,30 @@ export default function Expenses() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="card p-5">
-          <p className="text-xs font-semibold uppercase text-slate-400">Total Expenses</p>
-          <p className="text-2xl font-bold text-slate-800">{fmtMoney(stats.total)}</p>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="card p-4">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase text-slate-400">Total Udhaar</p>
+          <p className="text-lg sm:text-xl font-bold text-red-500 tracking-tight break-words">{fmtMoney(totalUdhaar)}</p>
         </div>
-        <div className="card p-5">
-          <p className="text-xs font-semibold uppercase text-slate-400">Rent</p>
-          <p className="text-2xl font-bold text-blue-600">{fmtMoney(stats.rent)}</p>
+        <div className="card p-4">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase text-slate-400">Total Expenses</p>
+          <p className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight break-words">{fmtMoney(stats.total)}</p>
         </div>
-        <div className="card p-5">
-          <p className="text-xs font-semibold uppercase text-slate-400">Utilities</p>
-          <p className="text-2xl font-bold text-amber-600">{fmtMoney(stats.utilities)}</p>
+        <div className="card p-4">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase text-slate-400">Rent</p>
+          <p className="text-lg sm:text-xl font-bold text-blue-600 tracking-tight break-words">{fmtMoney(stats.rent)}</p>
         </div>
-        <div className="card p-5">
-          <p className="text-xs font-semibold uppercase text-slate-400">Salaries</p>
-          <p className="text-2xl font-bold text-emerald-600">{fmtMoney(stats.salaries)}</p>
+        <div className="card p-4">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase text-slate-400">Utilities</p>
+          <p className="text-lg sm:text-xl font-bold text-amber-600 tracking-tight break-words">{fmtMoney(stats.utilities)}</p>
         </div>
-        <div className="card p-5">
-          <p className="text-xs font-semibold uppercase text-slate-400">Other</p>
-          <p className="text-2xl font-bold text-slate-600">{fmtMoney(stats.other)}</p>
+        <div className="card p-4">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase text-slate-400">Salaries</p>
+          <p className="text-lg sm:text-xl font-bold text-emerald-600 tracking-tight break-words">{fmtMoney(stats.salaries)}</p>
+        </div>
+        <div className="card p-4">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase text-slate-400">Other</p>
+          <p className="text-lg sm:text-xl font-bold text-slate-600 tracking-tight break-words">{fmtMoney(stats.other)}</p>
         </div>
       </div>
 
