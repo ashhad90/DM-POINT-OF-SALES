@@ -10,7 +10,8 @@ import {
   Store,
   Receipt,
   FileText,
-  BookOpen
+  BookOpen,
+  Wallet
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -21,6 +22,7 @@ const navItems = [
   { to: '/products', label: 'Products', icon: Package, adminOnly: false },
   { to: '/customers', label: 'Customers', icon: Users, adminOnly: true },
   { to: '/ledger', label: 'Udhaar Ledgers', icon: BookOpen, adminOnly: true },
+  { to: '/recovery', label: 'Recovery', icon: Wallet, adminOnly: true },
   { to: '/expenses', label: 'Expenses', icon: Receipt, adminOnly: true },
   { to: '/reports', label: 'Reports', icon: BarChart3, adminOnly: true },
   { to: '/settings', label: 'Settings', icon: Settings, adminOnly: true }

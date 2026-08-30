@@ -580,7 +580,7 @@ class LocalSupabaseClient {
   }
 
   record_payment(args) {
-    const { p_customer_id, p_amount, p_payment_method, p_note } = args
+    const { p_customer_id, p_amount, p_payment_method, p_note, p_created_at } = args
 
     const customers = JSON.parse(localStorage.getItem('pos_mock_customers') || '[]')
     const ledger = JSON.parse(localStorage.getItem('pos_mock_customer_ledger') || '[]')
@@ -592,6 +592,7 @@ class LocalSupabaseClient {
 
     customer.balance = Math.round((customer.balance - p_amount) * 100) / 100
     customer.updated_at = new Date().toISOString()
+    const effectiveDate = p_created_at ? new Date(p_created_at) : new Date()
 
     const ledgerId = crypto.randomUUID()
     ledger.push({
@@ -603,7 +604,7 @@ class LocalSupabaseClient {
       debit: 0,
       credit: p_amount,
       balance: customer.balance,
-      created_at: new Date().toISOString()
+      created_at: effectiveDate.toISOString()
     })
 
     localStorage.setItem('pos_mock_customers', JSON.stringify(customers))
