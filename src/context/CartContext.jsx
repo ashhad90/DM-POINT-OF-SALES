@@ -25,7 +25,7 @@ function reducer(state, action) {
           )
         }
       }
-      return { ...state, items: [...state.items, { product, quantity: 1, discount: 0 }] }
+      return { ...state, items: [...state.items, { product, quantity: 1, discount: 0, price: product.sale_price }] }
     }
     case 'SET_QTY': {
       const { id, quantity } = action
@@ -36,6 +36,15 @@ function reducer(state, action) {
         ...state,
         items: state.items.map((i) =>
           i.product.id === id ? { ...i, quantity: Math.min(quantity, i.product.quantity_on_hand) } : i
+        )
+      }
+    }
+    case 'SET_ITEM_PRICE': {
+      const { id, price } = action
+      return {
+        ...state,
+        items: state.items.map((i) =>
+          i.product.id === id ? { ...i, price: Math.max(0, price) } : i
         )
       }
     }
@@ -85,7 +94,7 @@ export function CartProvider({ children }) {
 
   const value = useMemo(() => {
     const subtotal = state.items.reduce(
-      (sum, i) => sum + i.product.sale_price * i.quantity,
+      (sum, i) => sum + (i.price ?? i.product.sale_price) * i.quantity,
       0
     )
     const itemDiscounts = state.items.reduce((sum, i) => sum + (i.discount || 0), 0)
@@ -104,6 +113,7 @@ export function CartProvider({ children }) {
       itemCount: state.items.reduce((sum, i) => sum + i.quantity, 0),
       add: (product) => dispatch({ type: 'ADD', product }),
       setQty: (id, quantity) => dispatch({ type: 'SET_QTY', id, quantity }),
+      setItemPrice: (id, price) => dispatch({ type: 'SET_ITEM_PRICE', id, price }),
       setItemDiscount: (id, discount) => dispatch({ type: 'SET_ITEM_DISCOUNT', id, discount }),
       remove: (id) => dispatch({ type: 'REMOVE', id }),
       setOrderDiscount: (discount) => dispatch({ type: 'SET_ORDER_DISCOUNT', discount }),

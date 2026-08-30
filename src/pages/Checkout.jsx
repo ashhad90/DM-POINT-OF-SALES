@@ -97,7 +97,7 @@ export default function Checkout() {
     const items = cart.items.map((i) => ({
       product_id: i.product.id,
       quantity: i.quantity,
-      unit_price: i.product.sale_price,
+      unit_price: i.price ?? i.product.sale_price,
       discount: i.discount || 0
     }))
 
@@ -426,8 +426,19 @@ export default function Checkout() {
                 <div key={i.product.id} className="flex items-center gap-2 rounded-xl border border-slate-200 p-2.5">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-slate-800">{i.product.name}</p>
-                    <p className="text-xs text-slate-400">{fmtMoney(i.product.sale_price)} each</p>
-                    <div className="mt-1 flex items-center gap-1.5">
+                    <div className="flex items-center gap-1 mt-0.5 mb-1.5">
+                      <span className="text-[10px] text-slate-400">PKR</span>
+                      <input 
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="w-20 rounded border border-slate-200 px-1.5 py-0.5 text-xs font-medium text-slate-700 outline-none focus:border-accent-400 bg-slate-50"
+                        value={i.price ?? i.product.sale_price}
+                        onChange={(e) => cart.setItemPrice(i.product.id, parseFloat(e.target.value) || 0)}
+                      />
+                      <span className="text-[10px] text-slate-400">each</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
                       <button onClick={() => cart.setQty(i.product.id, i.quantity - 1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50"><Minus size={14} /></button>
                       <span className="w-8 text-center text-sm font-bold">{i.quantity}</span>
                       <button
@@ -440,7 +451,7 @@ export default function Checkout() {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-sm font-bold text-slate-800">{fmtMoney(i.product.sale_price * i.quantity)}</span>
+                    <span className="text-sm font-bold text-slate-800">{fmtMoney((i.price ?? i.product.sale_price) * i.quantity)}</span>
                     {i.discount > 0 && <span className="text-xs font-semibold text-emerald-600">−{fmtMoney(i.discount)}</span>}
                     <button onClick={() => cart.remove(i.product.id)} className="text-slate-300 hover:text-red-500"><Trash2 size={15} /></button>
                   </div>
