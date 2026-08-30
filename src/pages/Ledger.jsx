@@ -2,9 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { BookOpen, Search, Printer, CheckSquare, Square, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
-import { fmtMoney } from '../lib/format'
+import { fmtMoney, fmtDate } from '../lib/format'
 import { printLedgerStatements, useReceiptStore } from '../lib/receipt'
 import EmptyState from '../components/ui/EmptyState'
+import Modal from '../components/ui/Modal'
 
 export default function Ledger() {
   const { push } = useToast()
@@ -15,6 +16,8 @@ export default function Ledger() {
   const [search, setSearch] = useState('')
   const [selectedIds, setSelectedIds] = useState([])
   const [printing, setPrinting] = useState(false)
+  const [selectedCustomer, setSelectedCustomer] = useState(null)
+  const [ledgerHistory, setLedgerHistory] = useState(null)
 
   const loadCustomers = async () => {
     setLoading(true)
@@ -58,6 +61,23 @@ export default function Ledger() {
       setSelectedIds([])
     } else {
       setSelectedIds(filtered.map((c) => c.id))
+    }
+  }
+
+  const viewHistory = async (customer) => {
+    setSelectedCustomer(customer)
+    setLedgerHistory(null)
+    const { data, error } = await supabase
+      .from('customer_ledger')
+      .select('*')
+      .eq('customer_id', customer.id)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    
+    if (error) {
+      push(error.message, 'error')
+    } else {
+      setLedgerHistory(data || [])
     }
   }
 
@@ -190,12 +210,20 @@ export default function Ledger() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => handlePrint([c.id])}
-                          className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
-                        >
-                          <Printer size={13} /> Print Statement
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => viewHistory(c)}
+                            className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
+                          >
+                            <BookOpen size={13} /> View History
+                          </button>
+                          <button
+                            onClick={() => handlePrint([c.id])}
+                            className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
+                          >
+                            <Printer size={13} /> Print
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -205,6 +233,49 @@ export default function Ledger() {
           </div>
         )}
       </div>
+
+      <Modal open={!!selectedCustomer} onClose={() => setSelectedCustomer(null)} title={`${selectedCustomer?.name} - Ledger History`} size="lg">
+        {selectedCustomer && (
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            {ledgerHistory === null ? (
+              <div className="flex justify-center py-10"><div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-accent-600" /></div>
+            ) : ledgerHistory.length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-400">No transactions recorded in ledger</p>
+            ) : (
+              <div className="max-h-[60vh] overflow-y-auto">
+                <table className="w-full text-left text-sm relative">
+                  <thead className="bg-slate-50 text-xs uppercase text-slate-500 sticky top-0 shadow-sm">
+                    <tr>
+                      <th className="px-4 py-2 font-semibold">Date</th>
+                      <th className="px-4 py-2 font-semibold">Description</th>
+                      <th className="px-4 py-2 text-right font-semibold">Debit (+)</th>
+                      <th className="px-4 py-2 text-right font-semibold">Credit (-)</th>
+                      <th className="px-4 py-2 text-right font-semibold">Running Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ledgerHistory.map((l) => (
+                      <tr key={l.id} className="border-t border-slate-100 text-slate-700 hover:bg-slate-50">
+                        <td className="px-4 py-2.5 text-xs text-slate-500">{fmtDate(l.created_at)}</td>
+                        <td className="px-4 py-2.5 font-medium text-slate-800">{l.description}</td>
+                        <td className="px-4 py-2.5 text-right text-red-500 font-medium">
+                          {l.debit > 0 ? `+${fmtMoney(l.debit)}` : '—'}
+                        </td>
+                        <td className="px-4 py-2.5 text-right text-emerald-600 font-medium">
+                          {l.credit > 0 ? `-${fmtMoney(l.credit)}` : '—'}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-bold text-slate-800">
+                          {fmtMoney(l.balance)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

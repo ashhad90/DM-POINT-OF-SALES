@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { FileText, Search, Printer, Calendar, RefreshCw, XCircle, ArrowLeftCircle, User, Banknote, Clock, HelpCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { FileText, Search, Printer, Calendar, RefreshCw, XCircle, ArrowLeftCircle, User, Banknote, Clock, HelpCircle, Edit, Trash2, Plus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
@@ -9,6 +10,7 @@ import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 import { CheckSquare, Square } from 'lucide-react'
+import Checkout from './Checkout'
 
 export default function Transactions() {
   const { push } = useToast()
@@ -18,11 +20,17 @@ export default function Transactions() {
   const [txns, setTxns] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [isAddingNew, setIsAddingNew] = useState(false)
   const [selectedTxn, setSelectedTxn] = useState(null)
   const [txnItems, setTxnItems] = useState([])
   const [itemsLoading, setItemsLoading] = useState(false)
   const [voiding, setVoiding] = useState(false)
   const [voidReason, setVoidReason] = useState('')
+  const [editingTxn, setEditingTxn] = useState(null)
+  const [editForm, setEditForm] = useState({ created_at: '', payment_method: 'cash' })
+  const [editBusy, setEditBusy] = useState(false)
+  const [deletingTxn, setDeletingTxn] = useState(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
   const [filterType, setFilterType] = useState('all') // 'all' | 'completed' | 'voided'
   const [selectedIds, setSelectedIds] = useState([])
   const [printing, setPrinting] = useState(false)
@@ -53,6 +61,15 @@ export default function Transactions() {
   useEffect(() => {
     loadTransactions()
   }, [filterType])
+
+  useEffect(() => {
+    if (editingTxn) {
+      setEditForm({
+        created_at: editingTxn.created_at ? editingTxn.created_at.slice(0, 16) : '',
+        payment_method: editingTxn.payment_method || 'cash'
+      })
+    }
+  }, [editingTxn])
 
   const filtered = txns.filter(t =>
     t.receipt_number.toLowerCase().includes(search.trim().toLowerCase()) ||
@@ -148,6 +165,41 @@ export default function Transactions() {
     }
   }
 
+  const handleEditSubmit = async (e) => {
+    e.preventDefault()
+    setEditBusy(true)
+    const { error } = await supabase
+      .from('transactions')
+      .update({
+        created_at: new Date(editForm.created_at).toISOString(),
+        payment_method: editForm.payment_method
+      })
+      .eq('id', editingTxn.id)
+
+    setEditBusy(false)
+    if (error) {
+      push(error.message, 'error')
+    } else {
+      push('Transaction updated successfully')
+      setEditingTxn(null)
+      loadTransactions()
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    setDeleteBusy(true)
+    const { error } = await supabase.from('transactions').delete().eq('id', deletingTxn.id)
+    setDeleteBusy(false)
+    if (error) {
+      push(error.message, 'error')
+    } else {
+      push('Transaction deleted permanently')
+      setDeletingTxn(null)
+      loadTransactions()
+    }
+  }
+
+
   return (
     <div className="mx-auto max-w-7xl p-4 md:p-6">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
@@ -156,6 +208,12 @@ export default function Transactions() {
           <p className="text-sm text-slate-500">{txns.length} transactions stored</p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsAddingNew(true)}
+            className="btn-primary py-1.5 px-3 text-xs inline-flex items-center gap-1.5"
+          >
+            <Plus size={14} /> Add New Bill
+          </button>
           <button
             onClick={handleBulkPrint}
             disabled={selectedIds.length === 0 || printing}
@@ -270,12 +328,29 @@ export default function Transactions() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => viewDetails(t)}
-                          className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
-                        >
-                          <FileText size={13} /> View Invoice
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => viewDetails(t)}
+                            className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
+                            title="View Invoice"
+                          >
+                            <FileText size={13} /> View Invoice
+                          </button>
+                          <button
+                            onClick={() => setEditingTxn(t)}
+                            className="btn-secondary px-2 py-1.5 text-xs text-blue-600 hover:bg-blue-50"
+                            title="Edit"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button
+                            onClick={() => setDeletingTxn(t)}
+                            className="btn-secondary px-2 py-1.5 text-xs text-red-600 hover:bg-red-50"
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -425,6 +500,76 @@ export default function Transactions() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal open={!!editingTxn} onClose={() => setEditingTxn(null)} title="Edit Transaction" size="sm">
+        {editingTxn && (
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div>
+              <label className="label">Date & Time</label>
+              <input
+                type="datetime-local"
+                className="input"
+                value={editForm.created_at}
+                onChange={(e) => setEditForm({ ...editForm, created_at: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="label">Payment Method</label>
+              <select
+                className="input"
+                value={editForm.payment_method}
+                onChange={(e) => setEditForm({ ...editForm, payment_method: e.target.value })}
+                required
+              >
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="credit">Credit / Udhaar</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <button type="button" onClick={() => setEditingTxn(null)} className="btn-secondary">Cancel</button>
+              <button type="submit" disabled={editBusy} className="btn-primary">
+                {editBusy ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal open={!!deletingTxn} onClose={() => setDeletingTxn(null)} title="Delete Transaction" size="sm">
+        {deletingTxn && (
+          <div className="space-y-4">
+            <div className="rounded-lg bg-red-50 p-4 border border-red-100">
+              <p className="text-sm text-red-800 font-semibold mb-1 flex items-center gap-2">
+                <Trash2 size={16} /> Delete Permanently?
+              </p>
+              <p className="text-xs text-red-700">
+                You are about to permanently delete Receipt <strong>{deletingTxn.receipt_number}</strong>.
+                This action cannot be undone. 
+                <br /><br />
+                <strong>Note:</strong> Deleting will NOT restore inventory items. If you need to restore stock, you should Void the transaction instead of deleting it.
+              </p>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button type="button" onClick={() => setDeletingTxn(null)} className="btn-secondary">Cancel</button>
+              <button type="button" onClick={handleDeleteConfirm} disabled={deleteBusy} className="btn-danger">
+                {deleteBusy ? 'Deleting...' : 'Delete Permanently'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Checkout Modal */}
+      <Modal open={isAddingNew} onClose={() => { setIsAddingNew(false); loadTransactions(); }} title="Create New Bill" size="full">
+        <div className="h-[75vh] -mx-5 -my-4 relative overflow-hidden bg-slate-50">
+          <Checkout />
+        </div>
       </Modal>
     </div>
   )

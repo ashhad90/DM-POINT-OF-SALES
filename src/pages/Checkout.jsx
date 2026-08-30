@@ -319,7 +319,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="flex h-full flex-col lg:flex-row">
+    <div className="flex h-full min-h-[60vh] flex-col lg:flex-row">
       {/* Product browser */}
       <div className="flex min-h-0 flex-1 flex-col p-4 lg:p-5">
         <div className="relative mb-3">
