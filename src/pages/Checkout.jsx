@@ -10,7 +10,7 @@ import ReceiptModal from '../components/checkout/ReceiptModal'
 import CustomerSelect from '../components/checkout/CustomerSelect'
 import { printReceipt } from '../lib/receipt'
 
-export default function Checkout() {
+export default function Checkout({ initialDate = '' }) {
   const { products } = useProducts()
   const cart = useCart()
   const { push } = useToast()
@@ -26,7 +26,7 @@ export default function Checkout() {
   const [recentSales, setRecentSales] = useState([])
   const [recentOpen, setRecentOpen] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [customDate, setCustomDate] = useState('')
+  const [customDate, setCustomDate] = useState(initialDate)
   const searchRef = useRef(null)
 
   // Customer pre-checkout selection state

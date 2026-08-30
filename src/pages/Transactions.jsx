@@ -11,16 +11,25 @@ import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 import { CheckSquare, Square } from 'lucide-react'
 import Checkout from './Checkout'
+import { useCart } from '../context/CartContext'
 
 export default function Transactions() {
   const { push } = useToast()
   const { isAdmin } = useAuth()
   const store = useReceiptStore()
+  const cart = useCart()
 
   const [txns, setTxns] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [isAddingNew, setIsAddingNew] = useState(false)
+  
+  // Pre-checkout states
+  const [preCheckoutOpen, setPreCheckoutOpen] = useState(false)
+  const [customers, setCustomers] = useState([])
+  const [preCustomer, setPreCustomer] = useState('')
+  const [preDate, setPreDate] = useState('')
+  
   const [selectedTxn, setSelectedTxn] = useState(null)
   const [txnItems, setTxnItems] = useState([])
   const [itemsLoading, setItemsLoading] = useState(false)
@@ -56,6 +65,30 @@ export default function Transactions() {
       setTxns(data || [])
     }
     setLoading(false)
+  }
+
+  const openPreCheckout = async () => {
+    setPreCustomer('')
+    setPreDate('')
+    setPreCheckoutOpen(true)
+    const { data } = await supabase.from('customers').select('*').order('name')
+    if (data) setCustomers(data)
+  }
+
+  const handlePreCheckoutSubmit = (e) => {
+    e.preventDefault()
+    if (preCustomer === 'walkin') {
+      cart.setCustomer(null)
+    } else if (preCustomer) {
+      const c = customers.find(x => x.id === preCustomer)
+      if (c) cart.setCustomer(c)
+    } else {
+      push('Please select a customer or Walk-in', 'error')
+      return
+    }
+    
+    setPreCheckoutOpen(false)
+    setIsAddingNew(true)
   }
 
   useEffect(() => {
@@ -208,11 +241,8 @@ export default function Transactions() {
           <p className="text-sm text-slate-500">{txns.length} transactions stored</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsAddingNew(true)}
-            className="btn-primary py-1.5 px-3 text-xs inline-flex items-center gap-1.5"
-          >
-            <Plus size={14} /> Add New Bill
+          <button onClick={openPreCheckout} className="btn-primary text-sm shadow-sm hover:shadow">
+            <Plus size={16} /> Add New Bill
           </button>
           <button
             onClick={handleBulkPrint}
@@ -565,10 +595,46 @@ export default function Transactions() {
         )}
       </Modal>
 
+      {/* Pre-Checkout Modal */}
+      <Modal open={preCheckoutOpen} onClose={() => setPreCheckoutOpen(false)} title="Start New Bill" size="sm">
+        <form onSubmit={handlePreCheckoutSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Select Customer</label>
+            <select
+              required
+              className="input"
+              value={preCustomer}
+              onChange={(e) => setPreCustomer(e.target.value)}
+            >
+              <option value="" disabled>Select a customer...</option>
+              <option value="walkin">-- Walk-in (No Customer) --</option>
+              {customers.map(c => (
+                <option key={c.id} value={c.id}>{c.name} {c.phone ? `(${c.phone})` : ''}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Custom Date (Optional)</label>
+            <input
+              type="datetime-local"
+              className="input"
+              value={preDate}
+              onChange={(e) => setPreDate(e.target.value)}
+              title="Leave empty for current time"
+            />
+            <p className="mt-1 text-xs text-slate-500">Purani date ka bill banana ho to select karein.</p>
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setPreCheckoutOpen(false)} className="btn-secondary">Cancel</button>
+            <button type="submit" className="btn-primary">Continue to Bill</button>
+          </div>
+        </form>
+      </Modal>
+
       {/* Checkout Modal */}
       <Modal open={isAddingNew} onClose={() => { setIsAddingNew(false); loadTransactions(); }} title="Create New Bill" size="full">
         <div className="h-[75vh] -mx-5 -my-4 relative overflow-hidden bg-slate-50">
-          <Checkout />
+          <Checkout initialDate={preDate} />
         </div>
       </Modal>
     </div>
