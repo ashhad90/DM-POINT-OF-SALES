@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Wallet, Search, CheckCircle, Clock } from 'lucide-react'
+import { Wallet, Search, CheckCircle, Clock, Plus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 import { fmtMoney, fmtDate } from '../lib/format'
 import EmptyState from '../components/ui/EmptyState'
+import Modal from '../components/ui/Modal'
 
 export default function Recovery() {
   const { push } = useToast()
@@ -20,6 +21,10 @@ export default function Recovery() {
   const [busy, setBusy] = useState(false)
   const [customDate, setCustomDate] = useState('')
 
+  // New customer state
+  const [creating, setCreating] = useState(false)
+  const [newCustForm, setNewCustForm] = useState({ name: '', phone: '', email: '' })
+
   const loadData = async () => {
     setLoading(true)
     
@@ -27,7 +32,6 @@ export default function Recovery() {
     const { data: custData, error: custErr } = await supabase
       .from('customers')
       .select('*')
-      .gt('balance', 0)
       .order('name')
       
     if (custErr) {
@@ -99,6 +103,31 @@ export default function Recovery() {
     loadData()
   }
 
+  const createCustomer = async (e) => {
+    e.preventDefault()
+    if (!newCustForm.name.trim()) return
+    setBusy(true)
+    const { data, error } = await supabase
+      .from('customers')
+      .insert({ name: newCustForm.name.trim(), phone: newCustForm.phone.trim(), email: newCustForm.email.trim() })
+      .select()
+      .single()
+    
+    setBusy(false)
+    if (error) {
+      push(error.message, 'error')
+      return
+    }
+    
+    push('Customer added successfully')
+    setCreating(false)
+    setNewCustForm({ name: '', phone: '', email: '' })
+    
+    // Refresh customers and auto-select new one
+    await loadData()
+    setSelectedCustomerId(data.id)
+  }
+
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId)
 
   return (
@@ -118,7 +147,16 @@ export default function Recovery() {
             
             <form onSubmit={handleRecordPayment} className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">Customer</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Customer</label>
+                  <button
+                    type="button"
+                    onClick={() => setCreating(true)}
+                    className="text-xs font-semibold text-accent-600 hover:text-accent-700 flex items-center gap-1"
+                  >
+                    <Plus size={12} /> New
+                  </button>
+                </div>
                 <select
                   required
                   className="input"
@@ -128,7 +166,7 @@ export default function Recovery() {
                   <option value="">Select customer...</option>
                   {customers.map(c => (
                     <option key={c.id} value={c.id}>
-                      {c.name} - Outstanding: {fmtMoney(c.balance)}
+                      {c.name} {c.balance > 0 ? `- Outstanding: ${fmtMoney(c.balance)}` : ''}
                     </option>
                   ))}
                 </select>
@@ -245,6 +283,47 @@ export default function Recovery() {
           </div>
         </div>
       </div>
+
+      {/* New Customer Modal */}
+      <Modal open={creating} onClose={() => setCreating(false)} title="New Customer" size="sm">
+        <form onSubmit={createCustomer} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Full Name *</label>
+            <input
+              required
+              className="input"
+              placeholder="e.g. John Doe"
+              value={newCustForm.name}
+              onChange={(e) => setNewCustForm({ ...newCustForm, name: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Phone</label>
+            <input
+              type="tel"
+              className="input"
+              placeholder="e.g. 0300-1234567"
+              value={newCustForm.phone}
+              onChange={(e) => setNewCustForm({ ...newCustForm, phone: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Email</label>
+            <input
+              type="email"
+              className="input"
+              value={newCustForm.email}
+              onChange={(e) => setNewCustForm({ ...newCustForm, email: e.target.value })}
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setCreating(false)} className="btn-secondary">Cancel</button>
+            <button type="submit" disabled={busy} className="btn-primary">
+              {busy ? 'Saving...' : 'Add Customer'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }
