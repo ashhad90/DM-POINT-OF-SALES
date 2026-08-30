@@ -389,7 +389,7 @@ class LocalSupabaseClient {
   }
 
   record_sale(args) {
-    const { p_customer_id, p_payment_method, p_amount_tendered, p_card_amount, p_tax_rate, p_items } = args
+    const { p_customer_id, p_payment_method, p_amount_tendered, p_card_amount, p_tax_rate, p_items, p_created_at } = args
 
     const products = JSON.parse(localStorage.getItem('pos_mock_products') || '[]')
     const transactions = JSON.parse(localStorage.getItem('pos_mock_transactions') || '[]')
@@ -405,10 +405,10 @@ class LocalSupabaseClient {
       }
     }
 
-    const now = new Date()
-    const yy = String(now.getFullYear()).slice(-2)
-    const mm = String(now.getMonth() + 1).padStart(2, '0')
-    const dd = String(now.getDate()).padStart(2, '0')
+    const effectiveDate = p_created_at ? new Date(p_created_at) : new Date()
+    const yy = String(effectiveDate.getFullYear()).slice(-2)
+    const mm = String(effectiveDate.getMonth() + 1).padStart(2, '0')
+    const dd = String(effectiveDate.getDate()).padStart(2, '0')
     const rand = String(Math.floor(Math.random() * 1000000)).padStart(6, '0')
     const receipt_number = `${yy}${mm}${dd}-${rand}`
 
@@ -460,7 +460,7 @@ class LocalSupabaseClient {
       change_due,
       card_amount: p_card_amount || 0,
       status: 'completed',
-      created_at: new Date().toISOString(),
+      created_at: effectiveDate.toISOString(),
       voided_at: null,
       voided_by: null,
       void_reason: ''
@@ -492,7 +492,7 @@ class LocalSupabaseClient {
           debit: total,
           credit: p_payment_method === 'credit' ? 0 : total,
           balance: customer.balance,
-          created_at: new Date().toISOString()
+          created_at: effectiveDate.toISOString()
         })
         
         localStorage.setItem('pos_mock_customers', JSON.stringify(customers))

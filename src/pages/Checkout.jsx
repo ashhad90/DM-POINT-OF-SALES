@@ -26,6 +26,7 @@ export default function Checkout() {
   const [recentSales, setRecentSales] = useState([])
   const [recentOpen, setRecentOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [customDate, setCustomDate] = useState('')
   const searchRef = useRef(null)
 
   // Customer pre-checkout selection state
@@ -106,7 +107,8 @@ export default function Checkout() {
       p_amount_tendered: amount_tendered,
       p_card_amount: card_amount,
       p_tax_rate: cart.taxRate,
-      p_items: items
+      p_items: items,
+      p_created_at: customDate ? new Date(customDate).toISOString() : null
     })
 
     if (error) {
@@ -129,7 +131,8 @@ export default function Checkout() {
       .select('*')
       .eq('transaction_id', data.id)
       .order('id')
-
+    cart.clear()
+    setCustomDate('')
     setLastTxn(txn)
     setLastItems(txnItems || [])
     setShowReceipt(true)
@@ -463,6 +466,17 @@ export default function Checkout() {
 
         <div className="space-y-3 border-t border-slate-100 px-4 py-4">
           <CustomerSelect />
+
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-xs font-semibold text-slate-500 uppercase flex-shrink-0">Custom Date</span>
+            <input 
+              type="datetime-local" 
+              className="input text-xs py-1.5 h-8 border-slate-200" 
+              value={customDate} 
+              onChange={(e) => setCustomDate(e.target.value)} 
+              title="Leave empty for current time"
+            />
+          </div>
 
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-slate-500"><span>Subtotal</span><span>{fmtMoney(cart.subtotal)}</span></div>
