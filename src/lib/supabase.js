@@ -617,6 +617,76 @@ class LocalSupabaseClient {
 
     return Promise.resolve({ data: { success: true, new_balance: customer.balance, ledger_id: ledgerId }, error: null })
   }
+
+  delete_payment(args) {
+    const { p_ledger_id } = args
+    const customers = JSON.parse(localStorage.getItem('pos_mock_customers') || '[]')
+    let ledger = JSON.parse(localStorage.getItem('pos_mock_customer_ledger') || '[]')
+    
+    const entryIndex = ledger.findIndex(l => l.id === p_ledger_id && l.type === 'payment')
+    if (entryIndex === -1) return Promise.resolve({ data: null, error: { message: 'PAYMENT_NOT_FOUND' } })
+    
+    const entry = ledger[entryIndex]
+    const customer = customers.find(c => c.id === entry.customer_id)
+    
+    ledger.splice(entryIndex, 1)
+    
+    const custLedger = ledger.filter(l => l.customer_id === entry.customer_id).sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    let bal = 0
+    for (const l of custLedger) {
+      bal = Math.round((bal + l.debit - l.credit) * 100) / 100
+      l.balance = bal
+    }
+    
+    if (customer) {
+      customer.balance = bal
+      customer.updated_at = new Date().toISOString()
+    }
+    
+    localStorage.setItem('pos_mock_customers', JSON.stringify(customers))
+    localStorage.setItem('pos_mock_customer_ledger', JSON.stringify(ledger))
+    setTimeout(() => {
+      triggerTableChange('customers')
+      triggerTableChange('customer_ledger')
+    }, 0)
+    
+    return Promise.resolve({ data: { success: true }, error: null })
+  }
+
+  edit_payment(args) {
+    const { p_ledger_id, p_amount, p_note, p_created_at } = args
+    const customers = JSON.parse(localStorage.getItem('pos_mock_customers') || '[]')
+    const ledger = JSON.parse(localStorage.getItem('pos_mock_customer_ledger') || '[]')
+    
+    const entry = ledger.find(l => l.id === p_ledger_id && l.type === 'payment')
+    if (!entry) return Promise.resolve({ data: null, error: { message: 'PAYMENT_NOT_FOUND' } })
+    
+    if (p_amount !== undefined) entry.credit = p_amount
+    if (p_note !== undefined) entry.description = p_note
+    if (p_created_at) entry.created_at = new Date(p_created_at).toISOString()
+    
+    const custLedger = ledger.filter(l => l.customer_id === entry.customer_id).sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    let bal = 0
+    for (const l of custLedger) {
+      bal = Math.round((bal + l.debit - l.credit) * 100) / 100
+      l.balance = bal
+    }
+    
+    const customer = customers.find(c => c.id === entry.customer_id)
+    if (customer) {
+      customer.balance = bal
+      customer.updated_at = new Date().toISOString()
+    }
+    
+    localStorage.setItem('pos_mock_customers', JSON.stringify(customers))
+    localStorage.setItem('pos_mock_customer_ledger', JSON.stringify(ledger))
+    setTimeout(() => {
+      triggerTableChange('customers')
+      triggerTableChange('customer_ledger')
+    }, 0)
+    
+    return Promise.resolve({ data: { success: true }, error: null })
+  }
 }
 
 export const supabase = isDemo
