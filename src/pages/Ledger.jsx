@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { BookOpen, Search, Printer, CheckSquare, Square, ChevronRight } from 'lucide-react'
+import { BookOpen, Search, Printer, CheckSquare, Square, ChevronRight, Edit, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 import { fmtMoney, fmtDate } from '../lib/format'
@@ -18,6 +18,11 @@ export default function Ledger() {
   const [printing, setPrinting] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [ledgerHistory, setLedgerHistory] = useState(null)
+  
+  const [editingCustomer, setEditingCustomer] = useState(null)
+  const [editForm, setEditForm] = useState({ name: '', phone: '', email: '', notes: '' })
+  const [deletingCustomer, setDeletingCustomer] = useState(null)
+  const [busy, setBusy] = useState(false)
 
   const loadCustomers = async () => {
     setLoading(true)
@@ -61,6 +66,51 @@ export default function Ledger() {
       setSelectedIds([])
     } else {
       setSelectedIds(filtered.map((c) => c.id))
+    }
+  }
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault()
+    if (!editForm.name.trim()) return
+    setBusy(true)
+
+    const updates = {
+      name: editForm.name.trim(),
+      phone: editForm.phone.trim() || null,
+      email: editForm.email.trim() || null,
+      notes: editForm.notes.trim() || null,
+      updated_at: new Date().toISOString()
+    }
+
+    const { error } = await supabase
+      .from('customers')
+      .update(updates)
+      .eq('id', editingCustomer.id)
+
+    setBusy(false)
+    if (error) {
+      push(error.message, 'error')
+    } else {
+      push('Customer updated successfully')
+      setEditingCustomer(null)
+      loadCustomers()
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    setBusy(true)
+    const { error } = await supabase
+      .from('customers')
+      .delete()
+      .eq('id', deletingCustomer.id)
+    
+    setBusy(false)
+    if (error) {
+      push(error.message, 'error')
+    } else {
+      push('Customer deleted successfully')
+      setDeletingCustomer(null)
+      loadCustomers()
     }
   }
 
@@ -213,15 +263,32 @@ export default function Ledger() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => viewHistory(c)}
-                            className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
+                            className="btn-secondary px-2 py-1.5 text-xs inline-flex items-center gap-1.5"
                           >
                             <BookOpen size={13} /> View History
                           </button>
                           <button
                             onClick={() => handlePrint([c.id])}
-                            className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
+                            className="btn-secondary px-2 py-1.5 text-xs inline-flex items-center gap-1.5 mr-2"
                           >
                             <Printer size={13} /> Print
+                          </button>
+                          <button 
+                            onClick={() => { 
+                              setEditingCustomer(c); 
+                              setEditForm({ name: c.name, phone: c.phone || '', email: c.email || '', notes: c.notes || '' });
+                            }} 
+                            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-accent-600"
+                            title="Edit Customer"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            onClick={() => setDeletingCustomer(c)} 
+                            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-red-500"
+                            title="Delete Customer"
+                          >
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -275,6 +342,73 @@ export default function Ledger() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Edit Customer Modal */}
+      <Modal open={!!editingCustomer} onClose={() => setEditingCustomer(null)} title="Edit Customer">
+        <form onSubmit={handleEditSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Full Name *</label>
+            <input
+              required
+              className="input"
+              placeholder="e.g. John Doe"
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Phone</label>
+            <input
+              type="tel"
+              className="input"
+              placeholder="e.g. 0300-1234567"
+              value={editForm.phone}
+              onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Email (Optional)</label>
+            <input
+              type="email"
+              className="input"
+              placeholder="e.g. john@example.com"
+              value={editForm.email}
+              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Notes (Optional)</label>
+            <textarea
+              className="input min-h-[80px] resize-none"
+              placeholder="Any additional details..."
+              value={editForm.notes}
+              onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setEditingCustomer(null)} className="btn-secondary">Cancel</button>
+            <button type="submit" disabled={busy} className="btn-primary">
+              {busy ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Customer Modal */}
+      <Modal open={!!deletingCustomer} onClose={() => setDeletingCustomer(null)} title="Delete Customer" size="sm">
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600">
+            Are you sure you want to delete <strong>{deletingCustomer?.name}</strong>? 
+            This will permanently remove the customer record.
+          </p>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setDeletingCustomer(null)} className="btn-secondary">Cancel</button>
+            <button type="button" onClick={handleDeleteConfirm} disabled={busy} className="btn-danger">
+              {busy ? 'Deleting...' : 'Delete Permanently'}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   )
