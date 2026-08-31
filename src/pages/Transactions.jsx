@@ -29,6 +29,13 @@ export default function Transactions() {
   const [customers, setCustomers] = useState([])
   const [preCustomer, setPreCustomer] = useState('')
   const [preDate, setPreDate] = useState('')
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [custSearch, setCustSearch] = useState('')
+  
+  // New Customer states
+  const [creatingCustomer, setCreatingCustomer] = useState(false)
+  const [newCustForm, setNewCustForm] = useState({ name: '', phone: '', email: '' })
+  const [custBusy, setCustBusy] = useState(false)
   
   const [selectedTxn, setSelectedTxn] = useState(null)
   const [txnItems, setTxnItems] = useState([])
@@ -89,6 +96,32 @@ export default function Transactions() {
     
     setPreCheckoutOpen(false)
     setIsAddingNew(true)
+  }
+
+  const handleCreateCustomer = async (e) => {
+    e.preventDefault()
+    if (!newCustForm.name.trim()) return
+    setCustBusy(true)
+    const { data, error } = await supabase
+      .from('customers')
+      .insert({ name: newCustForm.name.trim(), phone: newCustForm.phone.trim(), email: newCustForm.email.trim() })
+      .select()
+      .single()
+    
+    setCustBusy(false)
+    if (error) {
+      push(error.message, 'error')
+      return
+    }
+    
+    push('Customer added successfully')
+    setCreatingCustomer(false)
+    setNewCustForm({ name: '', phone: '', email: '' })
+    
+    // Refresh customers and auto-select new one
+    const res = await supabase.from('customers').select('*').order('name')
+    if (res.data) setCustomers(res.data)
+    setPreCustomer(data.id)
   }
 
   useEffect(() => {
@@ -599,19 +632,66 @@ export default function Transactions() {
       <Modal open={preCheckoutOpen} onClose={() => setPreCheckoutOpen(false)} title="Start New Bill" size="sm">
         <form onSubmit={handlePreCheckoutSubmit} className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Select Customer</label>
-            <select
-              required
-              className="input"
-              value={preCustomer}
-              onChange={(e) => setPreCustomer(e.target.value)}
-            >
-              <option value="" disabled>Select a customer...</option>
-              <option value="walkin">-- Walk-in (No Customer) --</option>
-              {customers.map(c => (
-                <option key={c.id} value={c.id}>{c.name} {c.phone ? `(${c.phone})` : ''}</option>
-              ))}
-            </select>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="text-sm font-semibold text-slate-700">Select Customer</label>
+              <button
+                type="button"
+                onClick={() => setCreatingCustomer(true)}
+                className="text-xs font-semibold text-accent-600 hover:text-accent-700 flex items-center gap-1"
+              >
+                <Plus size={12} /> New
+              </button>
+            </div>
+            
+            <div className="relative">
+              <div 
+                className="input flex items-center justify-between cursor-pointer"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                <span className={preCustomer ? 'text-slate-900' : 'text-slate-500'}>
+                  {preCustomer === 'walkin' 
+                    ? '-- Walk-in (No Customer) --' 
+                    : preCustomer 
+                      ? customers.find(c => c.id === preCustomer)?.name || 'Select a customer...'
+                      : 'Select a customer...'}
+                </span>
+                <Search size={14} className="text-slate-400" />
+              </div>
+              
+              {dropdownOpen && (
+                <div className="absolute z-50 mt-1 w-full rounded-md border border-slate-200 bg-white shadow-lg">
+                  <div className="p-2 border-b border-slate-100">
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder="Search customers..."
+                      className="w-full rounded bg-slate-50 px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-accent-500"
+                      value={custSearch}
+                      onChange={(e) => setCustSearch(e.target.value)}
+                    />
+                  </div>
+                  <div className="max-h-48 overflow-y-auto p-1">
+                    <div 
+                      className={`cursor-pointer rounded px-3 py-2 text-sm hover:bg-slate-50 ${preCustomer === 'walkin' ? 'bg-accent-50 text-accent-700 font-medium' : 'text-slate-700'}`}
+                      onClick={() => { setPreCustomer('walkin'); setDropdownOpen(false); }}
+                    >
+                      -- Walk-in (No Customer) --
+                    </div>
+                    {customers
+                      .filter(c => c.name.toLowerCase().includes(custSearch.toLowerCase()) || c.phone?.includes(custSearch))
+                      .map(c => (
+                        <div
+                          key={c.id}
+                          className={`cursor-pointer rounded px-3 py-2 text-sm hover:bg-slate-50 ${preCustomer === c.id ? 'bg-accent-50 text-accent-700 font-medium' : 'text-slate-700'}`}
+                          onClick={() => { setPreCustomer(c.id); setDropdownOpen(false); }}
+                        >
+                          {c.name} {c.phone ? `(${c.phone})` : ''}
+                        </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-semibold text-slate-700">Custom Date (Optional)</label>
@@ -627,6 +707,47 @@ export default function Transactions() {
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => setPreCheckoutOpen(false)} className="btn-secondary">Cancel</button>
             <button type="submit" className="btn-primary">Continue to Bill</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* New Customer Modal */}
+      <Modal open={creatingCustomer} onClose={() => setCreatingCustomer(false)} title="New Customer" size="sm">
+        <form onSubmit={handleCreateCustomer} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Full Name *</label>
+            <input
+              required
+              className="input"
+              placeholder="e.g. John Doe"
+              value={newCustForm.name}
+              onChange={(e) => setNewCustForm({ ...newCustForm, name: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Phone</label>
+            <input
+              type="tel"
+              className="input"
+              placeholder="e.g. 0300-1234567"
+              value={newCustForm.phone}
+              onChange={(e) => setNewCustForm({ ...newCustForm, phone: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Email</label>
+            <input
+              type="email"
+              className="input"
+              value={newCustForm.email}
+              onChange={(e) => setNewCustForm({ ...newCustForm, email: e.target.value })}
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setCreatingCustomer(false)} className="btn-secondary">Cancel</button>
+            <button type="submit" disabled={custBusy} className="btn-primary">
+              {custBusy ? 'Saving...' : 'Add Customer'}
+            </button>
           </div>
         </form>
       </Modal>
