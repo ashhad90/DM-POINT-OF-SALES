@@ -65,11 +65,12 @@ export function renderHtmlReceipt(txn, items, store = {}) {
       <td style="padding: 6px 0; text-align: left;">${idx + 1}</td>
       <td style="padding: 6px 0; text-align: left;">
         <div style="font-weight: 600; color: #1e293b;">${it.product_name}</div>
-        <div style="font-size: 11px; color: #64748b;">${it.sku}</div>
+        <div style="font-size: 11px; color: #64748b;">${it.sku || ''}</div>
       </td>
       <td style="padding: 6px 0; text-align: center; color: #334155;">${Math.abs(it.quantity)}</td>
-      <td style="padding: 6px 0; text-align: right; color: #334155;">PKR ${it.unit_price.toFixed(2)}</td>
-      <td style="padding: 6px 0; text-align: right; font-weight: 600; color: #1e293b;">PKR ${it.line_total.toFixed(2)}</td>
+      <td style="padding: 6px 0; text-align: right; color: #334155;">${it.unit_price.toFixed(2)}</td>
+      <td style="padding: 6px 0; text-align: right; color: #16a34a; font-size: 11px;">${it.discount && it.discount > 0 ? '-' + it.discount.toFixed(2) : '-'}</td>
+      <td style="padding: 6px 0; text-align: right; font-weight: 600; color: #1e293b;">${it.line_total.toFixed(2)}</td>
     </tr>
   `).join('')
 
@@ -175,6 +176,7 @@ export function renderHtmlReceipt(txn, items, store = {}) {
                 <th style="padding: 6px 0; text-align: left;">Item Description</th>
                 <th style="padding: 6px 0; text-align: center; width: 30px;">Qty</th>
                 <th style="padding: 6px 0; text-align: right; width: 50px;">Price</th>
+                <th style="padding: 6px 0; text-align: right; width: 40px;">Disc</th>
                 <th style="padding: 6px 0; text-align: right; width: 60px;">Total</th>
               </tr>
             </thead>
