@@ -231,25 +231,40 @@ export default function Transactions() {
     }
   }
 
-  const handleEditSubmit = async (e) => {
-    e.preventDefault()
-    setEditBusy(true)
-    const { error } = await supabase
-      .from('transactions')
-      .update({
-        created_at: new Date(editForm.created_at).toISOString(),
-        payment_method: editForm.payment_method
-      })
-      .eq('id', editingTxn.id)
-
-    setEditBusy(false)
-    if (error) {
-      push(error.message, 'error')
-    } else {
-      push('Transaction updated successfully')
-      setEditingTxn(null)
-      loadTransactions()
-    }
+  const handleEditClick = async (txn) => {
+    setItemsLoading(true)
+    const { data: items } = await supabase
+      .from('transaction_items')
+      .select('*, product:products(*)')
+      .eq('transaction_id', txn.id)
+      .order('id')
+      
+    // Format timezone-adjusted string for datetime-local
+    const dt = new Date(txn.created_at)
+    dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset())
+    const localDate = dt.toISOString().slice(0, 16)
+      
+    const cartItems = (items || []).map(i => ({
+      product: i.product || { id: i.product_id, name: i.product_name, sale_price: i.unit_price, quantity_on_hand: 999 },
+      quantity: i.quantity,
+      price: i.unit_price,
+      discount: i.discount
+    }))
+    
+    cart.loadCart({
+      items: cartItems,
+      orderDiscount: txn.discount - cartItems.reduce((sum, i) => sum + i.discount, 0),
+      taxRate: txn.tax_rate,
+      customer: txn.customer,
+      paymentMethod: txn.payment_method,
+      tendered: txn.amount_tendered,
+      cardAmount: txn.card_amount
+    })
+    
+    setPreDate(localDate)
+    setEditingTxn(txn)
+    setItemsLoading(false)
+    setIsAddingNew(true) // Open the big checkout modal!
   }
 
   const handleDeleteConfirm = async () => {
@@ -400,7 +415,7 @@ export default function Transactions() {
                             <FileText size={13} /> View Invoice
                           </button>
                           <button
-                            onClick={() => setEditingTxn(t)}
+                            onClick={() => handleEditClick(t)}
                             className="btn-secondary px-2 py-1.5 text-xs text-blue-600 hover:bg-blue-50"
                             title="Edit"
                           >
@@ -565,44 +580,6 @@ export default function Transactions() {
         )}
       </Modal>
 
-      {/* Edit Modal */}
-      <Modal open={!!editingTxn} onClose={() => setEditingTxn(null)} title="Edit Transaction" size="sm">
-        {editingTxn && (
-          <form onSubmit={handleEditSubmit} className="space-y-4">
-            <div>
-              <label className="label">Date & Time</label>
-              <input
-                type="datetime-local"
-                className="input"
-                value={editForm.created_at}
-                onChange={(e) => setEditForm({ ...editForm, created_at: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label className="label">Payment Method</label>
-              <select
-                className="input"
-                value={editForm.payment_method}
-                onChange={(e) => setEditForm({ ...editForm, payment_method: e.target.value })}
-                required
-              >
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="credit">Credit / Udhaar</option>
-              </select>
-            </div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-              <button type="button" onClick={() => setEditingTxn(null)} className="btn-secondary">Cancel</button>
-              <button type="submit" disabled={editBusy} className="btn-primary">
-                {editBusy ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </form>
-        )}
-      </Modal>
-
       {/* Delete Confirmation Modal */}
       <Modal open={!!deletingTxn} onClose={() => setDeletingTxn(null)} title="Delete Transaction" size="sm">
         {deletingTxn && (
@@ -753,9 +730,9 @@ export default function Transactions() {
       </Modal>
 
       {/* Checkout Modal */}
-      <Modal open={isAddingNew} onClose={() => { setIsAddingNew(false); loadTransactions(); }} title="Create New Bill" size="full">
+      <Modal open={isAddingNew} onClose={() => { setIsAddingNew(false); setEditingTxn(null); loadTransactions(); }} title={editingTxn ? `Edit Invoice ${editingTxn.receipt_number}` : "Create New Bill"} size="full">
         <div className="h-[75vh] -mx-5 -my-4 relative overflow-hidden bg-slate-50">
-          <Checkout initialDate={preDate} />
+          <Checkout initialDate={preDate} editingTxnId={editingTxn?.id} onEditComplete={() => { setIsAddingNew(false); setEditingTxn(null); loadTransactions(); }} />
         </div>
       </Modal>
     </div>

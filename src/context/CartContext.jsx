@@ -73,6 +73,8 @@ function reducer(state, action) {
       return { ...state, cardAmount: action.amount }
     case 'CLEAR':
       return { ...initialState }
+    case 'LOAD_CART':
+      return { ...state, ...action.payload }
     default:
       return state
   }
@@ -122,7 +124,8 @@ export function CartProvider({ children }) {
       setPaymentMethod: (method) => dispatch({ type: 'SET_PAYMENT_METHOD', method }),
       setTendered: (amount) => dispatch({ type: 'SET_TENDERED', amount }),
       setCardAmount: (amount) => dispatch({ type: 'SET_CARD_AMOUNT', amount }),
-      clear: () => dispatch({ type: 'CLEAR' })
+      clear: () => dispatch({ type: 'CLEAR' }),
+      loadCart: (payload) => dispatch({ type: 'LOAD_CART', payload })
     }
   }, [state])
 

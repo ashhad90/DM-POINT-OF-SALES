@@ -101,7 +101,8 @@ export default function Checkout({ initialDate = '' }) {
       discount: i.discount || 0
     }))
 
-    const { data, error } = await supabase.rpc('record_sale', {
+    const rpcName = editingTxnId ? 'update_sale' : 'record_sale'
+    const rpcArgs = {
       p_customer_id: cart.customer?.id || null,
       p_payment_method: payment_method,
       p_amount_tendered: amount_tendered,
@@ -109,7 +110,13 @@ export default function Checkout({ initialDate = '' }) {
       p_tax_rate: cart.taxRate,
       p_items: items,
       p_created_at: customDate ? new Date(customDate).toISOString() : null
-    })
+    }
+    
+    if (editingTxnId) {
+      rpcArgs.p_txn_id = editingTxnId
+    }
+
+    const { data, error } = await supabase.rpc(rpcName, rpcArgs)
 
     if (error) {
       if (error.message.includes('INSUFFICIENT_STOCK')) {
@@ -145,6 +152,10 @@ export default function Checkout({ initialDate = '' }) {
       printReceipt(txn, txnItems || [], store)
     } catch (e) {
       console.error('Auto-print failed:', e)
+    }
+    
+    if (editingTxnId && onEditComplete) {
+      onEditComplete()
     }
   }
 
@@ -502,7 +513,7 @@ export default function Checkout({ initialDate = '' }) {
           </div>
 
           <button onClick={openPayment} disabled={cart.items.length === 0 || busy} className="btn-primary h-14 w-full text-lg">
-            {busy ? 'Processing…' : `Charge ${fmtMoney(cart.total)}`}
+            {busy ? 'Processing…' : editingTxnId ? `Update Sale · ${fmtMoney(cart.total)}` : `Charge ${fmtMoney(cart.total)}`}
           </button>
         </div>
       </div>
