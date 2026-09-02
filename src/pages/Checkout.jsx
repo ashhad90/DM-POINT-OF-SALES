@@ -94,12 +94,31 @@ export default function Checkout({ initialDate = '', editingTxnId, onEditComplet
   }
 
   const completeSale = async ({ payment_method, amount_tendered, card_amount }) => {
-    const items = cart.items.map((i) => ({
-      product_id: i.product.id,
-      quantity: i.quantity,
-      unit_price: i.price ?? i.product.sale_price,
-      discount: i.discount || 0
-    }))
+    let remainingDiscount = cart.orderDiscount || 0;
+    const cartSubtotal = cart.items.reduce((sum, i) => sum + ((i.price ?? i.product.sale_price) * i.quantity), 0);
+
+    const items = cart.items.map((i, idx) => {
+      const itemTotal = (i.price ?? i.product.sale_price) * i.quantity;
+      let itemDisc = i.discount || 0;
+      
+      if (cart.orderDiscount > 0 && cartSubtotal > 0) {
+        let portion = (itemTotal / cartSubtotal) * cart.orderDiscount;
+        if (idx === cart.items.length - 1) {
+            portion = remainingDiscount;
+        } else {
+            portion = Math.round(portion * 100) / 100;
+            remainingDiscount -= portion;
+        }
+        itemDisc += portion;
+      }
+
+      return {
+        product_id: i.product.id,
+        quantity: i.quantity,
+        unit_price: i.price ?? i.product.sale_price,
+        discount: itemDisc
+      }
+    })
 
     const rpcName = editingTxnId ? 'update_sale' : 'record_sale'
     const rpcArgs = {
