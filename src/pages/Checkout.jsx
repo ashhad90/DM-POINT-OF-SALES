@@ -10,7 +10,7 @@ import ReceiptModal from '../components/checkout/ReceiptModal'
 import CustomerSelect from '../components/checkout/CustomerSelect'
 import { printReceipt } from '../lib/receipt'
 
-export default function Checkout({ initialDate = '' }) {
+export default function Checkout({ initialDate = '', editingTxnId, onEditComplete }) {
   const { products } = useProducts()
   const cart = useCart()
   const { push } = useToast()
