@@ -301,6 +301,7 @@ export default function Ledger() {
                   </th>
                   <th className="px-4 py-3 font-semibold">Customer</th>
                   <th className="px-4 py-3 font-semibold">Phone</th>
+                  <th className="px-4 py-3 font-semibold text-center">Last Active</th>
                   <th className="px-4 py-3 text-right font-semibold">Outstanding Balance</th>
                   <th className="px-4 py-3 text-right font-semibold">Actions</th>
                 </tr>
@@ -330,6 +331,9 @@ export default function Ledger() {
                       </td>
                       <td className="px-4 py-3 font-semibold text-slate-800">{c.name}</td>
                       <td className="px-4 py-3 text-slate-500">{c.phone || '—'}</td>
+                      <td className="px-4 py-3 text-center text-slate-400 text-xs">
+                        {c.updated_at ? fmtDate(c.updated_at) : '—'}
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <span className={`font-bold text-sm ${hasBalance ? 'text-rose-600' : 'text-slate-500'}`}>
                           {fmtMoney(c.balance || 0)}
