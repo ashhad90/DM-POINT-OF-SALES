@@ -1,4 +1,4 @@
-import { fmtDateTime } from '../lib/format'
+import { fmtDateTime, fmtDate } from '../lib/format'
 
 // Generates a printable, text-based receipt.
 export function renderReceipt(txn, items, store = {}) {
@@ -293,7 +293,7 @@ export function useReceiptStore() {
   }
 }
 
-export function renderHtmlLedger(customer, ledgerItems, store = {}, timeframe = 'all') {
+export function renderHtmlLedger(customer, ledgerItems, store = {}, timeframe = 'all', customDate = '') {
   const storeName = store.store_name || 'DM LUBRICANTS'
   const storeAddress = store.address || 'Shop # 12 Malir Karachi'
   const storePhone = store.phone || '03450204675'
@@ -304,6 +304,7 @@ export function renderHtmlLedger(customer, ledgerItems, store = {}, timeframe = 
   if (timeframe === 'today') timeframeLabel = 'Today'
   if (timeframe === 'week') timeframeLabel = 'This Week'
   if (timeframe === 'month') timeframeLabel = 'This Month'
+  if (timeframe === 'custom') timeframeLabel = `From ${fmtDate(customDate)}`
 
   const ledgerRows = ledgerItems.map((item, idx) => `
     <tr style="border-bottom: 1px solid #e2e8f0; font-size: 11px;">
@@ -388,7 +389,8 @@ export function renderHtmlLedger(customer, ledgerItems, store = {}, timeframe = 
 }
 
 export function printLedgerStatements(dataArray, store) {
-  const htmlContent = dataArray.map(item => renderHtmlLedger(item.customer, item.ledgerItems, store, item.timeframe)).join('')
+  const htmlContent = dataArray.map(item => renderHtmlLedger(item.customer, item.ledgerItems, store, item.timeframe, item.customDate)).join('')
+
   
   const fullHtml = `
     <!DOCTYPE html>

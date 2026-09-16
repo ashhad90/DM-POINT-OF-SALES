@@ -19,6 +19,7 @@ export default function Ledger() {
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [ledgerHistory, setLedgerHistory] = useState(null)
   const [timeframe, setTimeframe] = useState('all')
+  const [customDate, setCustomDate] = useState('')
   
   const [editingCustomer, setEditingCustomer] = useState(null)
   const [editForm, setEditForm] = useState({ name: '', phone: '', email: '', notes: '' })
@@ -27,6 +28,11 @@ export default function Ledger() {
 
   const getGteDate = () => {
     if (timeframe === 'all') return null
+    if (timeframe === 'custom' && customDate) {
+      const d = new Date(customDate)
+      d.setHours(0, 0, 0, 0)
+      return d.toISOString()
+    }
     const d = new Date()
     d.setHours(0, 0, 0, 0)
     if (timeframe === 'today') return d.toISOString()
@@ -76,7 +82,7 @@ export default function Ledger() {
   useEffect(() => {
     loadCustomers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeframe])
+  }, [timeframe, customDate])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -197,7 +203,7 @@ export default function Ledger() {
       const printData = targetCustomerIds.map((id) => {
         const customer = customers.find((c) => c.id === id)
         const items = (ledgerItems || []).filter((item) => item.customer_id === id)
-        return { customer, ledgerItems: items, timeframe }
+        return { customer, ledgerItems: items, timeframe, customDate }
       })
 
       printLedgerStatements(printData, store)
@@ -256,7 +262,17 @@ export default function Ledger() {
           <option value="today">Today</option>
           <option value="week">This Week</option>
           <option value="month">This Month</option>
+          <option value="custom">Custom Date...</option>
         </select>
+        
+        {timeframe === 'custom' && (
+          <input
+            type="date"
+            className="input w-48 bg-white"
+            value={customDate}
+            onChange={(e) => setCustomDate(e.target.value)}
+          />
+        )}
       </div>
 
       <div className="card overflow-hidden">
