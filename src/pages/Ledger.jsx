@@ -25,24 +25,58 @@ export default function Ledger() {
   const [deletingCustomer, setDeletingCustomer] = useState(null)
   const [busy, setBusy] = useState(false)
 
+  const getGteDate = () => {
+    if (timeframe === 'all') return null
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    if (timeframe === 'today') return d.toISOString()
+    if (timeframe === 'week') {
+      d.setDate(d.getDate() - d.getDay())
+      return d.toISOString()
+    }
+    if (timeframe === 'month') {
+      d.setDate(1)
+      return d.toISOString()
+    }
+    return null
+  }
+
   const loadCustomers = async () => {
     setLoading(true)
-    const { data, error } = await supabase
+    const { data: allCustomers, error } = await supabase
       .from('customers')
       .select('*')
       .order('name')
 
     if (error) {
       push(error.message, 'error')
+      setLoading(false)
+      return
+    }
+    
+    const gteDate = getGteDate()
+    if (gteDate) {
+      const { data: activeLedgers, error: ledgerErr } = await supabase
+        .from('customer_ledger')
+        .select('customer_id')
+        .gte('created_at', gteDate)
+        
+      if (!ledgerErr && activeLedgers) {
+        const activeIds = new Set(activeLedgers.map(l => l.customer_id))
+        setCustomers((allCustomers || []).filter(c => activeIds.has(c.id)))
+      } else {
+        setCustomers(allCustomers || [])
+      }
     } else {
-      setCustomers(data || [])
+      setCustomers(allCustomers || [])
     }
     setLoading(false)
   }
 
   useEffect(() => {
     loadCustomers()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeframe])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -113,22 +147,6 @@ export default function Ledger() {
       setDeletingCustomer(null)
       loadCustomers()
     }
-  }
-
-  const getGteDate = () => {
-    if (timeframe === 'all') return null
-    const d = new Date()
-    d.setHours(0, 0, 0, 0)
-    if (timeframe === 'today') return d.toISOString()
-    if (timeframe === 'week') {
-      d.setDate(d.getDate() - d.getDay())
-      return d.toISOString()
-    }
-    if (timeframe === 'month') {
-      d.setDate(1)
-      return d.toISOString()
-    }
-    return null
   }
 
   const viewHistory = async (customer) => {
