@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Plus, Trash2, Calendar, Filter, Receipt, Banknote, Briefcase, Zap } from 'lucide-react'
+import { Plus, Trash2, Calendar, Filter, Receipt, Banknote, Briefcase, Zap, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { fmtMoney, fmtDate } from '../lib/format'
 import Modal from '../components/ui/Modal'
@@ -106,13 +106,11 @@ export default function Expenses() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this expense?')) return
-    const { error: err } = await supabase.from('expenses').delete().eq('id', id)
-    if (!err) {
-      loadExpenses()
-    }
-  }
+  const [expandedId, setExpandedId] = useState(null);
+
+  const toggleExpand = (id) => {
+    setExpandedId(prev => (prev === id ? null : id));
+  };
 
   const categoryIcons = {
     rent: <Briefcase className="text-blue-500" size={16} />,
