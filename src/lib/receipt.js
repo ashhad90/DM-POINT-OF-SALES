@@ -293,12 +293,17 @@ export function useReceiptStore() {
   }
 }
 
-export function renderHtmlLedger(customer, ledgerItems, store = {}) {
+export function renderHtmlLedger(customer, ledgerItems, store = {}, timeframe = 'all') {
   const storeName = store.store_name || 'DM LUBRICANTS'
   const storeAddress = store.address || 'Shop # 12 Malir Karachi'
   const storePhone = store.phone || '03450204675'
   const storeWhatsapp = store.whatsapp || '03450204675'
   const storeEmail = store.email || 'info@Dmlubricant.com'
+  
+  let timeframeLabel = 'All Time'
+  if (timeframe === 'today') timeframeLabel = 'Today'
+  if (timeframe === 'week') timeframeLabel = 'This Week'
+  if (timeframe === 'month') timeframeLabel = 'This Month'
 
   const ledgerRows = ledgerItems.map((item, idx) => `
     <tr style="border-bottom: 1px solid #e2e8f0; font-size: 11px;">
@@ -338,7 +343,7 @@ export function renderHtmlLedger(customer, ledgerItems, store = {}) {
 
       <div style="text-align: center; margin-bottom: 20px;">
         <h2 style="margin: 0; font-size: 18px; color: #0f172a; text-transform: uppercase; letter-spacing: 1px;">Customer Udhaar Ledger Statement</h2>
-        <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">Generated on ${fmtDateTime(new Date())}</p>
+        <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">Period: ${timeframeLabel} &nbsp;|&nbsp; Generated on ${fmtDateTime(new Date())}</p>
       </div>
 
       <!-- Customer Summary -->
@@ -383,7 +388,7 @@ export function renderHtmlLedger(customer, ledgerItems, store = {}) {
 }
 
 export function printLedgerStatements(dataArray, store) {
-  const htmlContent = dataArray.map(item => renderHtmlLedger(item.customer, item.ledgerItems, store)).join('')
+  const htmlContent = dataArray.map(item => renderHtmlLedger(item.customer, item.ledgerItems, store, item.timeframe)).join('')
   
   const fullHtml = `
     <!DOCTYPE html>

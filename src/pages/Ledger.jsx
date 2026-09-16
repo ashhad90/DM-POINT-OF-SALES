@@ -18,6 +18,7 @@ export default function Ledger() {
   const [printing, setPrinting] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [ledgerHistory, setLedgerHistory] = useState(null)
+  const [timeframe, setTimeframe] = useState('all')
   
   const [editingCustomer, setEditingCustomer] = useState(null)
   const [editForm, setEditForm] = useState({ name: '', phone: '', email: '', notes: '' })
@@ -114,15 +115,39 @@ export default function Ledger() {
     }
   }
 
+  const getGteDate = () => {
+    if (timeframe === 'all') return null
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    if (timeframe === 'today') return d.toISOString()
+    if (timeframe === 'week') {
+      d.setDate(d.getDate() - d.getDay())
+      return d.toISOString()
+    }
+    if (timeframe === 'month') {
+      d.setDate(1)
+      return d.toISOString()
+    }
+    return null
+  }
+
   const viewHistory = async (customer) => {
     setSelectedCustomer(customer)
     setLedgerHistory(null)
-    const { data, error } = await supabase
+    
+    let query = supabase
       .from('customer_ledger')
       .select('*')
       .eq('customer_id', customer.id)
       .order('created_at', { ascending: false })
       .limit(100)
+      
+    const gteDate = getGteDate()
+    if (gteDate) {
+      query = query.gte('created_at', gteDate)
+    }
+      
+    const { data, error } = await query
     
     if (error) {
       push(error.message, 'error')
@@ -136,20 +161,25 @@ export default function Ledger() {
     setPrinting(true)
 
     try {
-      // Fetch all ledger transactions for target customers in chronological order
-      const { data: ledgerItems, error } = await supabase
+      let query = supabase
         .from('customer_ledger')
         .select('*')
         .in('customer_id', targetCustomerIds)
         .order('created_at', { ascending: true })
+        
+      const gteDate = getGteDate()
+      if (gteDate) {
+        query = query.gte('created_at', gteDate)
+      }
+
+      const { data: ledgerItems, error } = await query
 
       if (error) throw error
 
-      // Map each customer with their respective ledger records
       const printData = targetCustomerIds.map((id) => {
         const customer = customers.find((c) => c.id === id)
         const items = (ledgerItems || []).filter((item) => item.customer_id === id)
-        return { customer, ledgerItems: items }
+        return { customer, ledgerItems: items, timeframe }
       })
 
       printLedgerStatements(printData, store)
@@ -189,14 +219,26 @@ export default function Ledger() {
       </div>
 
       {/* Filter and Search */}
-      <div className="relative mb-4 max-w-md">
-        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          className="input pl-9"
-          placeholder="Search customer name or phone..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <div className="relative max-w-md flex-1">
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            className="input pl-9"
+            placeholder="Search customer name or phone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <select
+          className="input w-48 bg-white"
+          value={timeframe}
+          onChange={(e) => setTimeframe(e.target.value)}
+        >
+          <option value="all">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+        </select>
       </div>
 
       <div className="card overflow-hidden">
