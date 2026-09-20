@@ -117,9 +117,9 @@ export default function Ledger() {
 
     const updates = {
       name: editForm.name.trim(),
-      phone: editForm.phone.trim() || null,
-      email: editForm.email.trim() || null,
-      notes: editForm.notes.trim() || null,
+      phone: editForm.phone.trim(),
+      email: editForm.email.trim(),
+      notes: editForm.notes.trim(),
       updated_at: new Date().toISOString()
     }
 

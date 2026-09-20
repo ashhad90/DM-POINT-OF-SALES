@@ -348,18 +348,18 @@ export function renderHtmlLedger(customer, ledgerItems, store = {}, timeframe = 
       </div>
 
       <!-- Customer Summary -->
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
         <tr>
-          <td style="padding: 12px; font-size: 12px; line-height: 1.5; width: 60%;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: bold; margin-bottom: 4px;">Account Holder</div>
+          <td style="padding: 6px 12px; font-size: 12px; line-height: 1.2; width: 60%;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: bold; margin-bottom: 2px;">Account Holder</div>
             <div style="font-size: 15px; font-weight: bold; color: #0f172a;">${customer.name}</div>
             ${customer.phone ? `<div><strong>Phone:</strong> ${customer.phone}</div>` : ''}
             ${customer.email ? `<div><strong>Email:</strong> ${customer.email}</div>` : ''}
           </td>
-          <td style="padding: 12px; text-align: right; font-size: 12px; line-height: 1.5; width: 40%; border-left: 1px dashed #cbd5e1;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: bold; margin-bottom: 4px;">Total Outstanding Balance</div>
-            <div style="font-size: 20px; font-weight: 900; color: #b91c1c;">PKR ${(customer.balance || 0).toFixed(2)}</div>
-            <div style="font-size: 10px; color: #64748b; font-style: italic; margin-top: 2px;">Please clear dues as soon as possible.</div>
+          <td style="padding: 6px 12px; text-align: right; font-size: 12px; line-height: 1.2; width: 40%; border-left: 1px dashed #cbd5e1;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: bold; margin-bottom: 2px;">Total Outstanding Balance</div>
+            <div style="font-size: 18px; font-weight: 900; color: #b91c1c;">PKR ${(customer.balance || 0).toFixed(2)}</div>
+            <div style="font-size: 10px; color: #64748b; font-style: italic;">Please clear dues as soon as possible.</div>
           </td>
         </tr>
       </table>
