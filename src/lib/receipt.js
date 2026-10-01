@@ -104,7 +104,7 @@ export function renderHtmlReceipt(txn, items, store = {}) {
           @media print {
             @page { size: A4; margin: 15mm; }
             body { margin: 0; padding: 0; background: #fff; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .receipt-card { box-shadow: none !important; border: none !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .receipt-card { box-shadow: none !important; border: none !important; max-width: 90% !important; margin: 0 auto !important; padding: 15px !important; }
             .no-print { display: none; }
           }
           body {
@@ -342,10 +342,7 @@ export function renderHtmlLedger(customer, ledgerItems, store = {}, timeframe = 
       <!-- Red/Black Split Accent Divider -->
       <div style="height: 4px; background: linear-gradient(to right, #ef4444 35%, #0f172a 35%); margin-bottom: 20px;"></div>
 
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; font-size: 18px; color: #0f172a; text-transform: uppercase; letter-spacing: 1px;">Customer Udhaar Ledger Statement</h2>
-        <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">Period: ${timeframeLabel} &nbsp;|&nbsp; Generated on ${fmtDateTime(new Date())}</p>
-      </div>
+
 
       <!-- Customer Summary -->
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -403,7 +400,7 @@ export function printLedgerStatements(dataArray, store) {
             @page { size: A4; margin: 15mm; }
             body { margin: 0; padding: 0; background: #fff; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .no-print { display: none; }
-            div[style*="max-width: 800px"] { max-width: 100% !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+            div[style*="max-width: 800px"] { max-width: 90% !important; box-shadow: none !important; margin: 0 auto !important; padding: 15px !important; }
           }
           body {
             background-color: #f1f5f9;
@@ -612,7 +609,7 @@ export function printReceipts(txnDataArray, store) {
           @media print {
             @page { size: A4; margin: 15mm; }
             body { margin: 0; padding: 0; background: #fff; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .receipt-card { box-shadow: none !important; border: none !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .receipt-card { box-shadow: none !important; border: none !important; max-width: 90% !important; margin: 0 auto !important; padding: 15px !important; }
             .no-print { display: none; }
           }
           body {
