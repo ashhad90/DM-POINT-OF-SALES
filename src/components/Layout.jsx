@@ -46,7 +46,7 @@ export default function Layout() {
         <div className="flex items-center gap-2.5 border-b border-slate-100 px-5 py-5">
           <img src="/logo.png" alt="DM Logo" className="h-9 w-9 object-contain shrink-0" />
           <div>
-            <p className="text-sm font-bold text-slate-800">DM POS</p>
+            <p className="text-sm font-bold text-slate-800">Al Waleed</p>
             <p className="text-[11px] text-slate-400">Retail point of sale</p>
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function Layout() {
       <div className="fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="DM Logo" className="h-8 w-8 object-contain shrink-0" />
-          <span className="text-sm font-bold text-slate-800">DM POS</span>
+          <span className="text-sm font-bold text-slate-800">Al Waleed</span>
         </div>
         <div className="flex items-center gap-1">
           {items.map(({ to, label, icon: Icon }) => (

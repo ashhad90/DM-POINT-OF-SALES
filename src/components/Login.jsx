@@ -56,8 +56,8 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 font-sans">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-slate-100">
         <div className="flex flex-col items-center mb-8">
-          <img src="/logo.png" alt="DM POS Logo" className="h-20 object-contain mb-4" />
-          <h2 className="text-2xl font-bold text-slate-800">DM POS</h2>
+          <img src="/logo.png" alt="Al Waleed Logo" className="h-20 object-contain mb-4" />
+          <h2 className="text-2xl font-bold text-slate-800">Al Waleed</h2>
           <p className="text-sm text-slate-500 mt-1">Sign in to your point-of-sale system</p>
         </div>
 

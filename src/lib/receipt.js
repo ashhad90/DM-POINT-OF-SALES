@@ -11,7 +11,7 @@ export function renderReceipt(txn, items, store = {}) {
   }
   const padRight = (s, n) => s + ' '.repeat(Math.max(0, n - s.length))
 
-  lines.push(center(store.store_name || 'DM POS'))
+  lines.push(center(store.store_name || 'Al Waleed'))
   if (store.address) lines.push(center(store.address))
   if (store.phone) lines.push(center(store.phone))
   if (store.tax_label && store.tax_rate != null && store.tax_rate > 0) {
@@ -133,7 +133,7 @@ export function renderHtmlReceipt(txn, items, store = {}) {
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
               <!-- Left: Logo & Company Name -->
               <div style="display: flex; align-items: center; gap: 10px;">
-                <img src="/logo.png" alt="DM POS Logo" style="height: 52px; object-fit: contain; flex-shrink: 0;" />
+                <img src="/logo.png" alt="Al Waleed Logo" style="height: 52px; object-fit: contain; flex-shrink: 0;" />
                 <div style="text-align: left;">
                   <div style="font-size: 20px; font-weight: 900; color: #0f172a; line-height: 1.1; letter-spacing: -0.5px;">${storeName}</div>
                   <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Premium Lubricants</div>
@@ -233,7 +233,7 @@ export function renderHtmlReceipt(txn, items, store = {}) {
           <!-- FOOTER -->
           <div style="text-align: center; margin-top: 35px; border-top: 1px dashed #e2e8f0; padding-top: 15px; margin-bottom: 15px;">
             <div style="font-size: 12px; font-weight: 700; color: #334155;">Thank you for your business!</div>
-            <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">Powered by DM POS</div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">Powered by Al Waleed</div>
           </div>
           <!-- Red/Black Split Accent Footer Band mimicking reference design -->
           <div style="height: 10px; background: linear-gradient(to right, #ef4444 35%, #0f172a 35%); margin-left: -24px; margin-right: -24px; margin-bottom: -24px; border-radius: 0 0 12px 12px; margin-top: 25px;"></div>
@@ -497,7 +497,7 @@ export function printReceipts(txnDataArray, store) {
         <div style="margin-bottom: 20px;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <img src="/logo.png" alt="DM POS Logo" style="height: 52px; object-fit: contain; flex-shrink: 0;" />
+              <img src="/logo.png" alt="Al Waleed Logo" style="height: 52px; object-fit: contain; flex-shrink: 0;" />
               <div style="text-align: left;">
                 <div style="font-size: 20px; font-weight: 900; color: #0f172a; line-height: 1.1; letter-spacing: -0.5px;">${storeName}</div>
                 <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Premium Lubricants</div>
@@ -591,7 +591,7 @@ export function printReceipts(txnDataArray, store) {
         <!-- FOOTER -->
         <div style="text-align: center; margin-top: 35px; border-top: 1px dashed #e2e8f0; padding-top: 15px; margin-bottom: 15px;">
           <div style="font-size: 12px; font-weight: 700; color: #334155;">Thank you for your business!</div>
-          <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">Powered by DM POS</div>
+          <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">Powered by Al Waleed</div>
         </div>
         <!-- Red/Black Split Accent Footer Band -->
         <div style="height: 10px; background: linear-gradient(to right, #ef4444 35%, #0f172a 35%); margin-left: -24px; margin-right: -24px; margin-bottom: -24px; border-radius: 0 0 12px 12px; margin-top: 25px;"></div>
